@@ -1,0 +1,54 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://notification_db:5432/notification}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: public
+    liquibase-schema: public
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: auth-service
+          jwk-set-uri: http://auth-service:8081/auth/.well-known/jwks.json
+
+unisender:
+  api-key: ${UNISENDER_API_KEY}
+  api-url: ${UNISENDER_API_URL:https://api.unisender.com}
+  sender-name: ${UNISENDER_SENDER_NAME}
+  sender-email: ${UNISENDER_SENDER_EMAIL}
+  max-retries: 3
+  initial-delay: 1000
+  multiplier: 2
+  max-delay: 10000
+
+banking:
+  kafka:
+    topics:
+      systemErrors: system.errors
+      users: auth.users
+      logins: auth.logins
+      transfers: banking.transfers

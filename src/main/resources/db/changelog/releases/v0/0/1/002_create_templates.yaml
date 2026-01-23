@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002_create_templates
+      author: kirill25
+      changes:
+        - createTable:
+            tableName: templates
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: subject_template
+                  type: text
+
+              - column:
+                  name: body_template
+                  type: text
+
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+        - createIndex:
+            indexName: idx_templates_type
+            tableName: templates
+            columns:
+              - column:
+                  name: type

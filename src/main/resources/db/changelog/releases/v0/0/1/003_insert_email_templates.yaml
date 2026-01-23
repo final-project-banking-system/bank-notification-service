@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003_insert_email_templates
+      author: kirill25
+      changes:
+        - insert:
+            tableName: templates
+            columns:
+              - column:
+                  name: id
+                  valueComputed: gen_random_uuid()
+              - column:
+                  name: type
+                  value: WELCOME
+              - column:
+                  name: subject_template
+                  value: Добро пожаловать, {username}!
+              - column:
+                  name: body_template
+                  value: |
+                    <h1>Добро пожаловать, {username}!</h1>
+                    <p>Ваш аккаунт создан {date}.</p>
+                    <p>С уважением, Банк</p>
+
+        - insert:
+            tableName: templates
+            columns:
+              - column:
+                  name: id
+                  valueComputed: gen_random_uuid()
+              - column:
+                  name: type
+                  value: LOGIN
+              - column:
+                  name: subject_template
+                  value: Вход в систему
+              - column:
+                  name: body_template
+                  value: |
+                    <h1>Вы вошли в систему</h1>
+                    <p>Вход выполнен {date} с устройства: {device}</p>
+                    <p>С уважением, Банк</p>
+
+        - insert:
+            tableName: templates
+            columns:
+              - column:
+                  name: id
+                  valueComputed: gen_random_uuid()
+              - column:
+                  name: type
+                  value: TRANSFER
+              - column:
+                  name: subject_template
+                  value: Перевод выполнен
+              - column:
+                  name: body_template
+                  value: |
+                    <h1>Перевод выполнен</h1>
+                    <p>Сумма: {amount} {currency}</p>
+                    <p>Со счета: {from}</p>
+                    <p>На счет: {to}</p>
+                    <p>Дата: {date}</p>
+                    <p>С уважением, Банк</p>

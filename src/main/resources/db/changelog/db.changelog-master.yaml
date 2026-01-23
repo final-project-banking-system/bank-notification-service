@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/releases/v0/0/1/001_create_notifications.yaml
+  - include:
+      file: db/changelog/releases/v0/0/1/002_create_templates.yaml
+  - include:
+      file: db/changelog/releases/v0/0/1/003_insert_email_templates.yaml
