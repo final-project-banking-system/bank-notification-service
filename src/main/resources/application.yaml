@@ -26,7 +26,24 @@ spring:
     liquibase-schema: public
 
   kafka:
+    admin:
+      auto-create: true
+      properties:
+        offsets.topic.replication.factor: 1
+        transaction.state.log.replication.factor: 1
+        transaction.state.log.min.isr: 1
     bootstrap-servers: kafka:9092
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      isolation-level: read_committed
+      max-poll-records: 1
+      fetch-min-size: 1
+    properties:
+      enable.idempotence: true
+    listener:
+      type: single
 
   security:
     oauth2:

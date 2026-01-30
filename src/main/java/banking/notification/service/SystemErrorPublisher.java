@@ -43,14 +43,13 @@ public class SystemErrorPublisher {
             log.error("Failed to serialize system error payload, errorId={}", errorId, ex);
             return;
         }
-        kafkaTemplate.send(topicSystemErrors, errorId.toString(), json)
-                .whenComplete((result, error) -> {
-                    if (error != null) {
-                        log.error("Failed to publish system error to Kafka: errorId={}", errorId, error);
-                    } else {
-                        log.warn("System error published to Kafka: errorId={}, operation={}, message={}",
-                                errorId, operation, message);
-                    }
-                });
+
+        try {
+            kafkaTemplate.send(topicSystemErrors, errorId.toString(), json);
+            log.warn("System error published to Kafka: errorId={}, operation={}, message={}",
+                    errorId, operation, message);
+        } catch (Exception ex) {
+            log.error("Failed to publish system error to Kafka: errorId={}", errorId, ex);
+        }
     }
 }

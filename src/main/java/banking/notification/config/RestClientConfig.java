@@ -7,9 +7,9 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfig {
     @Bean
-    public RestClient restClient() {
+    public RestClient unsisenderRestClient() {
         return RestClient.builder()
-                .baseUrl("https://api.unisender.com") // Базовый URL, можно опустить
+                .baseUrl("https://api.unisender.com")
                 .defaultHeader("Content-Type", "application/json")
                 .requestInterceptor(
                         (request, body, execution) -> execution.execute(request, body))
