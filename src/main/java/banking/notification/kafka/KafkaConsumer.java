@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.annotation.RetryableTopic;
-import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -32,12 +30,6 @@ public class KafkaConsumer {
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
 
-    @RetryableTopic(
-            attempts = "1",
-            dltStrategy = DltStrategy.FAIL_ON_ERROR,
-            dltTopicSuffix = ".dlt",
-            include = {Exception.class}
-    )
     @KafkaListener(
             topics = "${banking.kafka.topics.users}",
             groupId = "${spring.application.name}",
@@ -85,12 +77,6 @@ public class KafkaConsumer {
         }
     }
 
-    @RetryableTopic(
-            attempts = "1",
-            dltStrategy = DltStrategy.FAIL_ON_ERROR,
-            dltTopicSuffix = ".dlt",
-            include = {Exception.class}
-    )
     @KafkaListener(
             topics = "${banking.kafka.topics.logins}",
             groupId = "${spring.application.name}",
@@ -143,12 +129,6 @@ public class KafkaConsumer {
         }
     }
 
-    @RetryableTopic(
-            attempts = "1",
-            dltStrategy = DltStrategy.FAIL_ON_ERROR,
-            dltTopicSuffix = ".dlt",
-            include = {Exception.class}
-    )
     @KafkaListener(
             topics = "${banking.kafka.topics.transfers}",
             groupId = "${spring.application.name}",
