@@ -1,5 +1,6 @@
-package banking.notification.exception;
+package banking.notification.error.handler;
 
+import banking.notification.error.ErrorResponse;
 import banking.notification.service.SystemErrorPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -61,6 +61,12 @@ databaseChangeLog:
                   constraints:
                     nullable: false
 
+              - column:
+                  name: version
+                  type: bigint
+                  constraints:
+                    nullable: false
+
         - createIndex:
             indexName: idx_notifications_user_id
             tableName: notifications

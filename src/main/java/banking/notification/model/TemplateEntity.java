@@ -1,22 +1,18 @@
 package banking.notification.model;
 
-import jakarta.persistence.*;
-import lombok.Data;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.Setter;
 
 @Entity
 @Table(name = "templates")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-public class TemplateEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
+public class TemplateEntity extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String type;
 
@@ -25,8 +21,4 @@ public class TemplateEntity {
 
     @Column(name = "body_template", columnDefinition = "TEXT")
     private String bodyTemplate;
-
-    @Column(name = "updated_at")
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

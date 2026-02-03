@@ -16,37 +16,40 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Transactional
 public class KafkaConsumer {
     private final ObjectMapper objectMapper;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
+    private final ConcurrentHashMap<String, KafkaEventWrapper> kafkaEvents = new ConcurrentHashMap<>();
 
     @KafkaListener(
             topics = "${banking.kafka.topics.users}",
             groupId = "${spring.application.name}",
             containerFactory = "kafkaListenerManualCommitContainerFactory"
     )
-    public void handleUserCreated(@Payload KafkaEventWrapper wrapper,
-                                  ConsumerRecord<String, Object> record,
-                                  Acknowledgment acknowledgment) {
+    public void handleUserCreated(@Payload String message,
+                                  ConsumerRecord<String, String> record,
+                                  Acknowledgment acknowledgment) throws Exception {
         String messageId = String.format("%s-%d-%d", record.topic(), record.partition(), record.offset());
         try {
+            if (kafkaEvents.containsKey(messageId)) {
+                log.info("Дубликат пропущен [id={}]:",  messageId);
+                acknowledgment.acknowledge();
+                return;
+            }
+
             log.info("Получено событие Kafka [id={}]: partition={}, offset={}",
                     messageId, record.partition(), record.offset());
 
-            if (wrapper == null) {
-                log.error("Wrapper is null for USER_CREATED event [id={}]", messageId);
-                throw new IllegalArgumentException("Wrapper is null for USER_CREATED event");
-            }
+            KafkaEventWrapper wrapper = objectMapper.readValue(message, KafkaEventWrapper.class);
 
             if (!"USER_CREATED".equals(wrapper.getEventType())) {
                 log.debug("Пропускаем событие с типом: {}", wrapper.getEventType());
@@ -68,12 +71,14 @@ public class KafkaConsumer {
             }
 
             notificationService.sendWelcomeNotification(UUID.fromString(event.getUserId()), event.getLogin(), event.getEmail());
+            kafkaEvents.put(messageId, wrapper);
             acknowledgment.acknowledge();
             log.info("Обработано событие по регистрации пользователя: userId={}, messageId={}", event.getUserId(), messageId);
         } catch (Exception exception) {
             log.error("Не удалось обработать событие [id={}] по регистрации пользователя: {}",
                     messageId, exception.getMessage(), exception);
-            throw new RuntimeException(exception);
+            acknowledgment.acknowledge();
+            throw exception;
         }
     }
 
@@ -82,18 +87,21 @@ public class KafkaConsumer {
             groupId = "${spring.application.name}",
             containerFactory = "kafkaListenerManualCommitContainerFactory"
     )
-    public void handleUserLogin(@Payload KafkaEventWrapper wrapper,
-                                ConsumerRecord<String, Object> record,
-                                Acknowledgment acknowledgment) {
+    public void handleUserLogin(@Payload String message,
+                                ConsumerRecord<String, String> record,
+                                Acknowledgment acknowledgment) throws Exception {
         String messageId = String.format("%s-%d-%d", record.topic(), record.partition(), record.offset());
         try {
+            if (kafkaEvents.containsKey(messageId)) {
+                log.info("Дубликат пропущен [id={}]:",  messageId);
+                acknowledgment.acknowledge();
+                return;
+            }
+
             log.info("Получено событие Kafka [id={}]: partition={}, offset={}",
                     messageId, record.partition(), record.offset());
 
-            if (wrapper == null) {
-                log.error("Wrapper is null for USER_LOGIN event [id={}]", messageId);
-                throw new IllegalArgumentException("Wrapper is null for USER_LOGIN event");
-            }
+            KafkaEventWrapper wrapper = objectMapper.readValue(message, KafkaEventWrapper.class);
 
             if (!"USER_LOGIN".equals(wrapper.getEventType())) {
                 log.debug("Пропускаем событие с типом: {}", wrapper.getEventType());
@@ -120,12 +128,14 @@ public class KafkaConsumer {
             notificationEntity.ifPresent(
                     entity -> notificationService.sendLoginNotification(event.getUserId(),
                             entity.getRecipientEmail(), event.getDeviceInfo()));
+            kafkaEvents.put(messageId, wrapper);
             acknowledgment.acknowledge();
             log.info("Обработано событие по аутентификации пользователя: userId={}, messageId={}", event.getUserId(), messageId);
         } catch (Exception exception) {
             log.error("Не удалось обработать событие [id={}] по аутентификации пользователя: {}",
                     messageId, exception.getMessage(), exception);
-            throw new RuntimeException(exception);
+            acknowledgment.acknowledge();
+            throw exception;
         }
     }
 
@@ -134,18 +144,21 @@ public class KafkaConsumer {
             groupId = "${spring.application.name}",
             containerFactory = "kafkaListenerManualCommitContainerFactory"
     )
-    public void handleTransferCompleted(@Payload KafkaEventWrapper wrapper,
-                                        ConsumerRecord<String, Object> record,
-                                        Acknowledgment acknowledgment) {
+    public void handleTransferCompleted(@Payload String message,
+                                        ConsumerRecord<String, String> record,
+                                        Acknowledgment acknowledgment) throws Exception {
         String messageId = String.format("%s-%d-%d", record.topic(), record.partition(), record.offset());
         try {
+            if (kafkaEvents.containsKey(messageId)) {
+                log.info("Дубликат пропущен [id={}]:",  messageId);
+                acknowledgment.acknowledge();
+                return;
+            }
+
             log.info("Получено событие Kafka [id={}]: partition={}, offset={}",
                     messageId, record.partition(), record.offset());
 
-            if (wrapper == null) {
-                log.error("Wrapper is null for TRANSFER_COMPLETED event [id={}]", messageId);
-                throw new IllegalArgumentException("Wrapper is null for TRANSFER_COMPLETED event");
-            }
+            KafkaEventWrapper wrapper = objectMapper.readValue(message, KafkaEventWrapper.class);
 
             if (!"TRANSFER_COMPLETED".equals(wrapper.getEventType())) {
                 log.debug("Пропускаем событие с типом: {}", wrapper.getEventType());
@@ -174,13 +187,14 @@ public class KafkaConsumer {
                     event.getFromAccountId(),
                     event.getToAccountId()
             ));
+            kafkaEvents.put(messageId, wrapper);
             acknowledgment.acknowledge();
             log.info("Обработано событие по совершенному переводу для пользователя: userId={}, messageId={}",
                     event.getUserId(), messageId);
         } catch (Exception exception) {
             log.error("Не удалось обработать событие по совершенному переводу для пользователя: {}",
                     exception.getMessage(), exception);
-            throw new RuntimeException(exception);
+            throw exception;
         }
     }
 }

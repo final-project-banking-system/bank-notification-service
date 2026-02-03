@@ -1,4 +1,4 @@
-package banking.notification.exception;
+package banking.notification.error;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
