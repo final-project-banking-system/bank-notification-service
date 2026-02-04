@@ -77,7 +77,6 @@ public class KafkaConsumer {
         } catch (Exception exception) {
             log.error("Не удалось обработать событие [id={}] по регистрации пользователя: {}",
                     messageId, exception.getMessage(), exception);
-            acknowledgment.acknowledge();
             throw exception;
         }
     }
@@ -134,7 +133,6 @@ public class KafkaConsumer {
         } catch (Exception exception) {
             log.error("Не удалось обработать событие [id={}] по аутентификации пользователя: {}",
                     messageId, exception.getMessage(), exception);
-            acknowledgment.acknowledge();
             throw exception;
         }
     }
