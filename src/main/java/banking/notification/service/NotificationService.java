@@ -49,6 +49,7 @@ public class NotificationService {
 
         } catch (Exception e) {
             log.error("Ошибка отправки welcome: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -77,6 +78,7 @@ public class NotificationService {
 
         } catch (Exception e) {
             log.error("Ошибка отправки login: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -107,6 +109,7 @@ public class NotificationService {
 
         } catch (Exception e) {
             log.error("Ошибка отправки transfer: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
