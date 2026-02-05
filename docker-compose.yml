@@ -1,0 +1,93 @@
+services:
+  notification_db:
+    image: postgres:15-alpine
+    container_name: notification-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notification
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d notification"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5433:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+    networks: [bank-net]
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "2181" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "2181:2181"
+    networks: [bank-net]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: OUTSIDE://:29092,INTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: OUTSIDE://localhost:29092,INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    ports:
+      - "29092:29092"
+    networks: [bank-net]
+
+  notification-service:
+    build:
+      context: .
+    image: notification-service
+    container_name: notification-service
+    restart: unless-stopped
+    depends_on:
+      notification_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      UNISENDER_API_KEY: ${UNISENDER_API_KEY}
+      UNISENDER_SENDER_EMAIL: ${UNISENDER_SENDER_EMAIL}
+      UNISENDER_SENDER_NAME: ${UNISENDER_SENDER_NAME}
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notification_db:5432/notification
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/.well-known/jwks.json
+    ports:
+      - "8084:8084"
+    networks: [bank-net]
+
+volumes:
+  notification_db_data:
+
+networks:
+  bank-net:
+    driver: bridge

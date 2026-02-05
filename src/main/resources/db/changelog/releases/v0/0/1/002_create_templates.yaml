@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002_create_templates
+      author: kirill25
+      changes:
+        - createTable:
+            tableName: templates
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: type
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: subject_template
+                  type: text
+
+              - column:
+                  name: body_template
+                  type: text
+
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: version
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_templates_type
+            tableName: templates
+            columns:
+              - column:
+                  name: type
